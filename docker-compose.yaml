@@ -1,0 +1,116 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+  discovery-service:
+    image: krishnagopika4/discovery-service:latest
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    ports:
+      - 8761:8761
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  apigateway-service:
+    image: krishnagopika4/apigateway-service:latest
+    build:
+      context: ./apigateway-service
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+
+  order-service:
+    image: krishnagopika4/order-service:latest
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8082
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - spring.kafka.bootstrap-servers=broker:29092
+
+    depends_on:
+      - discovery-service
+      - apigateway-service
+
+  product-service:
+    image: krishnagopika4/product-service:latest
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - 8081:8081
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - apigateway-service
+  inventory-service:
+    image: krishnagopika4/inventory-service:latest
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    ports:
+      - 8083:8083
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - apigateway-service
+  
+  notification-service:
+    image: krishnagopika4/notification-service:latest
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    ports:
+      - 8085:8085
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - spring.kafka.bootstrap-servers=broker:29092
+
+    depends_on:
+      - discovery-service
+      - apigateway-service
+
+  
+  
+    
+
+  
+
