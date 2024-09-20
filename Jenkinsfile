@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_COMPOSE_VERSION = '1.29.2'
-        GIT_REPO = 'https://github.com/yourusername/your-msa-repo.git'
+        GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
     }
 
