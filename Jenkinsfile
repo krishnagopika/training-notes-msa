@@ -48,20 +48,23 @@ pipeline {
                 }
             }
         }
+         stage('Create .env file') {
+            steps {
+                script {
+                    // Create .env file with database credentials
+                    sh """
+                    echo "DB_URL=${DB_URL}" > .env
+                    echo "RDS_USERNAME=${RDS_USERNAME}" >> .env
+                    echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
+                    """
+                }
+            }
+        }
+
 
         stage('Update Docker Compose File') {
             steps {
                 script {
-                     withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
-                                     string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
-                       def envContent = """
-                    RDS_USERNAME=${RDS_USERNAME}
-                    DB_PASSWORD=${DB_PASSWORD}
-                    DB_URL=${DB_URL}
-                    """
-                    writeFile file: '.env', text: envContent
-                        sh 'ls -al'
-                        sh 'cat .env'
 
                      
                     def composeFile = readFile 'docker-compose.yml'
@@ -72,8 +75,6 @@ pipeline {
                         composeFile = composeFile.replaceAll("(image: .*${serviceName}:).*", "\$1${BUILD_NUMBER}")
                     }
                     writeFile file: 'docker-compose.yml', text: composeFile
-
-                     }
                 }
             }
         }
