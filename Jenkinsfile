@@ -59,7 +59,10 @@ pipeline {
                         DB_USERNAME=${DB_USERNAME}
                         DB_PASSWORD=${DB_PASSWORD}
                         DB_NAME=${DB_URL}
-                        """
+                        """    
+                        sh 'ls -al'
+
+                     
                     def composeFile = readFile 'docker-compose.yml'
                     def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                     for (service in services) {
