@@ -63,6 +63,8 @@ pipeline {
                         sh 'ls -al'
                         sh 'cat .env'
 
+                         sh 'pwd'
+
                      
                     def composeFile = readFile 'docker-compose.yml'
                     def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
