@@ -54,11 +54,14 @@ pipeline {
                 script {
                      withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
-                    def envContent = "RDS_USERNAME=${RDS_USERNAME}\n" +
-                         "DB_PASSWORD=${DB_PASSWORD}\n" +
-                         "DB_URL=${DB_URL}\n"
-
+                       def envContent = """
+                    RDS_USERNAME=${RDS_USERNAME}
+                    DB_PASSWORD=${DB_PASSWORD}
+                    DB_URL=${DB_URL}
+                    """
                     writeFile file: '.env', text: envContent
+                        sh 'ls -al'
+                        sh 'cat .env'
 
                      
                     def composeFile = readFile 'docker-compose.yml'
@@ -78,7 +81,7 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 sh "docker-compose down || true"
-                sh "docker-compose up --env-file .env -d"
+                sh "docker-compose up -d"
             }
         }
     }
