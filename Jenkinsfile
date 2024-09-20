@@ -55,7 +55,7 @@ pipeline {
                      withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
                        def envContent = """
-                    RDS_USER=${RDS_USERNAME}
+                    RDS_USERNAME=${RDS_USERNAME}
                     DB_PASSWORD=${DB_PASSWORD}
                     DB_URL=${DB_URL}
                     """
