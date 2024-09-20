@@ -56,7 +56,7 @@ pipeline {
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
                       def envContent = "RDS_USERNAME=${RDS_USERNAME}\n" +
                          "DB_PASSWORD=${DB_PASSWORD}\n" +
-                         "DB_URL=DB_URL\n"
+                         "DB_URL=${DB_URL}\n"
 
                     writeFile file: '.env', text: envContent
                     writeFile file: '.env', text: envContent
