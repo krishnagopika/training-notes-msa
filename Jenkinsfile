@@ -53,6 +53,8 @@ pipeline {
                     def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                     for (service in services) {
                         def serviceName = service.trim().replaceAll('/', '')
+                        serviceName = service.trim().replaceAll('.', '')
+
                         composeFile = composeFile.replaceAll("(image: .*${serviceName}:).*", "\$1${BUILD_NUMBER}")
                     }
                     writeFile file: 'docker-compose.yml', text: composeFile
