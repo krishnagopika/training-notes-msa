@@ -92,9 +92,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - spring.kafka.bootstrap-servers=broker:29092
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/orders
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
+      - spring.datasource.url=jdbc:mysql://${DB_URL}:3306/orders
+      - spring.datasource.username=${RDS_USERNAME}
+      - spring.datasource.password=${DB_PASSWORD}
 
     depends_on:
       - discovery-service
@@ -109,9 +109,9 @@ services:
       - 8081:8081
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/product
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
+      - spring.datasource.url=jdbc:mysql://${DB_URL}:3306/product
+      - spring.datasource.username=${RDS_USERNAME}
+      - spring.datasource.password=${DB_PASSWORD}
     depends_on:
       - discovery-service
       - apigateway-service
@@ -124,9 +124,9 @@ services:
       - 8083:8083
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/inventory
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
+      - spring.datasource.url=jdbc:mysql://${DB_URL}:3306/inventory
+      - spring.datasource.username=${RDS_USERNAME}
+      - spring.datasource.password=${DB_PASSWORD}
     depends_on:
       - discovery-service
       - apigateway-service
