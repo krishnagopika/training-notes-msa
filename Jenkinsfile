@@ -61,6 +61,7 @@ pipeline {
                         DB_NAME=${DB_URL}
                         """    
                         sh 'ls -al'
+                        sh 'cat .env'
 
                      
                     def composeFile = readFile 'docker-compose.yml'
