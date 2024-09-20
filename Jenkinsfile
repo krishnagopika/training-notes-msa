@@ -54,9 +54,9 @@ pipeline {
                 script {
                      withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
-                      def envContent = "DB_USER=${DB_USER}\n" +
+                      def envContent = "RDS_USERNAME=${RDS_USERNAME}\n" +
                          "DB_PASSWORD=${DB_PASSWORD}\n" +
-                         "DB_NAME=your_database_name\n"
+                         "DB_URL=DB_URL\n"
 
                     writeFile file: '.env', text: envContent
                     writeFile file: '.env', text: envContent
