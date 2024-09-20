@@ -6,6 +6,9 @@ pipeline {
         GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         username = 'krishnagopika4'
+        DB_USER = credentials('DB_USER')
+        DB_PASSWORD = credentials('DB_PASSWORD')
+        DB_URL = credentials('DB_URL')
     }
 
     stages {
@@ -49,6 +52,14 @@ pipeline {
         stage('Update Docker Compose File') {
             steps {
                 script {
+                     withCredentials([string(credentialsId: 'DB_USER', variable: 'DB_USER'), 
+                                     string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
+                        // Create .env file
+                        writeFile file: '.env', text: """
+                        DB_USER=${DB_USER}
+                        DB_PASSWORD=${DB_PASSWORD}
+                        DB_NAME=${DB_URL}
+                        """
                     def composeFile = readFile 'docker-compose.yml'
                     def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                     for (service in services) {
@@ -57,6 +68,8 @@ pipeline {
                         composeFile = composeFile.replaceAll("(image: .*${serviceName}:).*", "\$1${BUILD_NUMBER}")
                     }
                     writeFile file: 'docker-compose.yml', text: composeFile
+
+                     }
                 }
             }
         }
