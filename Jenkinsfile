@@ -34,10 +34,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
                         sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin"
-                        def services = sh(script: "find . -maxdepth 1 -type d -not -name '*@tmp' -not -name 'prometheus' -not -name '.'", returnStdout: true).trim().split('\n')
-
-                    
-                        services = services.collect { it.replace('./', '') }
+                        def services = sh(script: "find . -maxdepth 1 -type d -name '*-service' -not -name '*@tmp' -not -name 'prometheus' -not -name '.git' -not -name 'grafana' -not -name '.'", returnStdout: true).trim().split('\n')
 
                         for (service in services) {
                             def serviceName = service.trim().replaceAll('/', '')
