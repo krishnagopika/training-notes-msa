@@ -54,9 +54,11 @@ pipeline {
                 script {
                      withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
-                         sh "echo ${DB_URL} | docker secret create db_url -"
-                        sh "echo ${RDS_USERNAME} | docker secret create rds_username -"
-                        sh "echo ${DB_PASSWORD} | docker secret create db_password -"
+                    def envContent = "RDS_USERNAME=${RDS_USERNAME}\n" +
+                         "DB_PASSWORD=${DB_PASSWORD}\n" +
+                         "DB_URL=${DB_URL}\n"
+
+                    writeFile file: '.env', text: envContent
 
                      
                     def composeFile = readFile 'docker-compose.yml'
@@ -84,7 +86,6 @@ pipeline {
     post {
         always {
             sh "docker-compose logs"
-            cleanWs()
         }
     }
 }
