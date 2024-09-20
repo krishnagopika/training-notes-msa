@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_COMPOSE_VERSION = '1.29.2'
-        GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
+        GIT_REPO = 'https://github.com/yourusername/your-msa-repo.git'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
     }
 
@@ -17,7 +17,7 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    def services = sh(script: "ls -d */", returnStdout: true).trim().split('\n')
+                    def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                     for (service in services) {
                         dir(service.trim()) {
                             def serviceName = service.trim().replaceAll('/', '')
@@ -33,7 +33,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
                         sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin"
-                        def services = sh(script: "ls -d */", returnStdout: true).trim().split('\n')
+                        def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                         for (service in services) {
                             def serviceName = service.trim().replaceAll('/', '')
                             sh "docker tag ${serviceName}:${BUILD_NUMBER} $DOCKER_HUB_USERNAME/${serviceName}:${BUILD_NUMBER}"
@@ -48,7 +48,7 @@ pipeline {
             steps {
                 script {
                     def composeFile = readFile 'docker-compose.yml'
-                    def services = sh(script: "ls -d */", returnStdout: true).trim().split('\n')
+                    def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
                     for (service in services) {
                         def serviceName = service.trim().replaceAll('/', '')
                         composeFile = composeFile.replaceAll("(image: .*${serviceName}:).*", "\$1${BUILD_NUMBER}")
