@@ -5,7 +5,6 @@ pipeline {
         DOCKER_COMPOSE_VERSION = '1.29.2'
         GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        username = 'krishnagopika4'
         RDS_USERNAME = credentials('RDS_USERNAME')
         DB_PASSWORD = credentials('DB_PASSWORD')
         DB_URL = credentials('DB_URL')
@@ -41,8 +40,8 @@ pipeline {
                             
                         for (service in services) {
                             def serviceName = service.trim().replaceAll('./', '')
-                            sh "docker tag ${serviceName}:${BUILD_NUMBER} ${username}/${serviceName}:${BUILD_NUMBER}"
-                            sh "docker push ${username}/${serviceName}:${BUILD_NUMBER}"
+                            sh "docker tag ${serviceName}:${BUILD_NUMBER} ${DOCKER_HUB_USERNAME}/${serviceName}:${BUILD_NUMBER}"
+                            sh "docker push ${DOCKER_HUB_USERNAME}/${serviceName}:${BUILD_NUMBER}"
                         }
                     }
                 }
