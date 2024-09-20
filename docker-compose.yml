@@ -1,149 +1,88 @@
-version: '3.8'
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.0.1
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+pipeline {
+    agent any
 
-  broker:
-    image: confluentinc/cp-kafka:7.0.1
-    container_name: broker
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  
-  zipkin:
-    image: openzipkin/zipkin
-    container_name: zipkin
-    ports:
-      - "9411:9411"
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    restart: always
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - product-service
-      - order-service
-      - inventory-service
-      - notification-service
+    environment {
+        DOCKER_COMPOSE_VERSION = '1.29.2'
+        GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        username = 'krishnagopika4'
+    }
 
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    restart: always
-    ports:
-      - "3000:3000"
-    links:
-      - prometheus:prometheus
-    volumes:
-      - 'grafana-storage:/var/lib/grafana'
-    environment:
-      - GF_SECURITY_{DB_USERNAME}_USER={DB_USERNAME}
-      - GF_SECURITY_{DB_USERNAME}_PASSWORD=password
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: "${GIT_REPO}"
+            }
+        }
 
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
+                    for (service in services) {
+                        dir(service.trim()) {
+                            def serviceName = service.trim().replaceAll('/', '')
+                            sh "docker build -t ${serviceName}:${BUILD_NUMBER} ."
+                        }
+                    }
+                }
+            }
+        }
 
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                        sh "echo \$DOCKER_HUB_PASSWORD | docker login -u \$DOCKER_HUB_USERNAME --password-stdin"
+                        def services = sh(script: "find . -maxdepth 1 -type d -name '*-service' -not -name '*@tmp' -not -name 'prometheus' -not -name '.git' -not -name 'grafana' -not -name '.'", returnStdout: true).trim().split('\n')
+                        
+                        for (service in services) {
+                            def serviceName = service.trim().replaceAll('./', '')
+                            sh "docker tag ${serviceName}:${BUILD_NUMBER} ${username}/${serviceName}:${BUILD_NUMBER}"
+                            sh "docker push ${username}/${serviceName}:${BUILD_NUMBER}"
+                        }
+                    }
+                }
+            }
+        }
 
-  discovery-service:
-    image: krishnagopika4/discovery-service:latest
-    build:
-      context: ./discovery-service
-      dockerfile: Dockerfile
-    ports:
-      - 8761:8761
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
+        stage('Update Docker Compose File') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
+                                     string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), 
+                                     string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
+                        def envContent = "RDS_USERNAME=${RDS_USERNAME}\n" +
+                                         "DB_PASSWORD=${DB_PASSWORD}\n" +
+                                         "DB_URL=${DB_URL}\n"
 
-  apigateway-service:
-    image: krishnagopika4/apigateway-service:latest
-    build:
-      context: ./apigateway-service
-      dockerfile: Dockerfile
-    ports:
-      - 9000:9000
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - discovery-service
+                        writeFile file: '.env', text: envContent
 
-  order-service:
-    image: krishnagopika4/order-service:latest
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
-    ports:
-      - 8082:8082
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - spring.kafka.bootstrap-servers=broker:29092
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/orders
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
+                        def composeFile = readFile 'docker-compose.yml'
+                        def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
+                        for (service in services) {
+                            def serviceName = service.trim().replaceAll('./', '')
+                            composeFile = composeFile.replaceAll("(image: .*${serviceName}:).*", "\$1${BUILD_NUMBER}")
+                        }
+                        writeFile file: 'docker-compose.yml', text: composeFile
+                    }
+                }
+            }
+        }
 
-    depends_on:
-      - discovery-service
-      - apigateway-service
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    sh "docker-compose down || true"
+                    sh "docker-compose up --env-file .env -d"
+                }
+            }
+        }
+    }
 
-  product-service:
-    image: krishnagopika4/product-service:latest
-    build:
-      context: ./product-service
-      dockerfile: Dockerfile
-    ports:
-      - 8081:8081
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/product
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
-    depends_on:
-      - discovery-service
-      - apigateway-service
-  inventory-service:
-    image: krishnagopika4/inventory-service:latest
-    build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    ports:
-      - 8083:8083
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/inventory
-      - spring.datasource.username={RDS_USERNAME}
-      - spring.datasource.password={DB_PASSWORD}
-    depends_on:
-      - discovery-service
-      - apigateway-service
-  
-  notification-service:
-    image: krishnagopika4/notification-service:latest
-    build:
-      context: ./notification-service
-      dockerfile: Dockerfile
-    ports:
-      - 8085:8085
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - spring.kafka.bootstrap-servers=broker:29092
-
-    depends_on:
-      - discovery-service
-      - apigateway-service
-volumes:
-  grafana-storage: {}
+    post {
+        always {
+            sh "docker-compose logs"
+        }
+    }
+}
