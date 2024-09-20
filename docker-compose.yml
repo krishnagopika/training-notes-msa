@@ -55,8 +55,8 @@ services:
     volumes:
       - 'grafana-storage:/var/lib/grafana'
     environment:
-      - GF_SECURITY_{RDS_USERNAME}_USER={RDS_USERNAME}
-      - GF_SECURITY_{RDS_USERNAME}_PASSWORD=password
+      - GF_SECURITY_{DB_USERNAME}_USER={DB_USERNAME}
+      - GF_SECURITY_{DB_USERNAME}_PASSWORD=password
 
 
 
