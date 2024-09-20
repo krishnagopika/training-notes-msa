@@ -30,6 +30,35 @@ services:
     container_name: zipkin
     ports:
       - "9411:9411"
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - product-service
+      - order-service
+      - inventory-service
+      - notification-service
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    links:
+      - prometheus:prometheus
+    volumes:
+      - 'grafana-storage:/var/lib/grafana'
+    environment:
+      - GF_SECURITY_{DB_USERNAME}_USER={DB_USERNAME}
+      - GF_SECURITY_{DB_USERNAME}_PASSWORD=password
+
+
 
   discovery-service:
     image: krishnagopika4/discovery-service:latest
@@ -63,6 +92,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - spring.kafka.bootstrap-servers=broker:29092
+      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/orders
+      - spring.datasource.username={DB_USERNAME}
+      - spring.datasource.password={DB_PASSWORD}
 
     depends_on:
       - discovery-service
@@ -77,6 +109,9 @@ services:
       - 8081:8081
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/product
+      - spring.datasource.username={DB_USERNAME}
+      - spring.datasource.password={DB_PASSWORD}
     depends_on:
       - discovery-service
       - apigateway-service
@@ -89,6 +124,9 @@ services:
       - 8083:8083
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - spring.datasource.url=jdbc:mysql://{DB_URL}:3306/inventory
+      - spring.datasource.username={DB_USERNAME}
+      - spring.datasource.password={DB_PASSWORD}
     depends_on:
       - discovery-service
       - apigateway-service
@@ -107,10 +145,5 @@ services:
     depends_on:
       - discovery-service
       - apigateway-service
-
-  
-  
-    
-
-  
-
+volumes:
+  grafana-storage: {}
