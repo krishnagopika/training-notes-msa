@@ -21,7 +21,7 @@ pipeline {
                     for (service in services) {
                         dir(service.trim()) {
                             def serviceName = service.trim().replaceAll('/', '')
-                            sh "sudo docker build -t ${serviceName}:${BUILD_NUMBER} ."
+                            sh "docker build -t ${serviceName}:${BUILD_NUMBER} ."
                         }
                     }
                 }
@@ -36,8 +36,8 @@ pipeline {
                         def services = sh(script: "ls -d */", returnStdout: true).trim().split('\n')
                         for (service in services) {
                             def serviceName = service.trim().replaceAll('/', '')
-                            sh sudo "docker tag ${serviceName}:${BUILD_NUMBER} $DOCKER_HUB_USERNAME/${serviceName}:${BUILD_NUMBER}"
-                            sh "sudo docker push $DOCKER_HUB_USERNAME/${serviceName}:${BUILD_NUMBER}"
+                            sh "docker tag ${serviceName}:${BUILD_NUMBER} $DOCKER_HUB_USERNAME/${serviceName}:${BUILD_NUMBER}"
+                            sh "docker push $DOCKER_HUB_USERNAME/${serviceName}:${BUILD_NUMBER}"
                         }
                     }
                 }
@@ -60,8 +60,8 @@ pipeline {
 
         stage('Deploy with Docker Compose') {
             steps {
-                sh "sudo docker-compose down || true"
-                sh "sudo docker-compose up -d"
+                sh "docker-compose down || true"
+                sh "docker-compose up -d"
             }
         }
     }
