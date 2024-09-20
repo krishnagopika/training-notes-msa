@@ -6,7 +6,7 @@ pipeline {
         GIT_REPO = 'https://github.com/krishnagopika/training-notes-msa.git'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         username = 'krishnagopika4'
-        DB_USERNAME = credentials('DB_USERNAME')
+        RDS_USERNAME = credentials('RDS_USERNAME')
         DB_PASSWORD = credentials('DB_PASSWORD')
         DB_URL = credentials('DB_URL')
     }
@@ -52,11 +52,11 @@ pipeline {
         stage('Update Docker Compose File') {
             steps {
                 script {
-                     withCredentials([string(credentialsId: 'DB_USERNAME', variable: 'DB_USERNAME'), 
+                     withCredentials([string(credentialsId: 'RDS_USERNAME', variable: 'RDS_USERNAME'), 
                                      string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASSWORD'), string(credentialsId: 'DB_URL', variable: 'DB_URL')]) {
                         // Create .env file
                         writeFile file: '.env', text: """
-                        DB_USERNAME=${DB_USERNAME}
+                        RDS_USERNAME=${RDS_USERNAME}
                         DB_PASSWORD=${DB_PASSWORD}
                         DB_NAME=${DB_URL}
                         """    
