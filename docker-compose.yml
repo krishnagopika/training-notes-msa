@@ -147,11 +147,3 @@ services:
       - apigateway-service
 volumes:
   grafana-storage: {}
-
-secrets:
-  db_url:
-    external: true
-  rds_username:
-    external: true
-  db_password:
-    external: true
