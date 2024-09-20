@@ -21,10 +21,10 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    def services = sh(script: "ls -d */ | grep -v '^prometheus/'", returnStdout: true).trim().split('\n')
+                        def services = sh(script: "find . -maxdepth 1 -type d -name '*-service' -not -name '*@tmp' -not -name 'prometheus' -not -name '.git' -not -name 'grafana' -not -name '.'", returnStdout: true).trim().split('\n')
                     for (service in services) {
                         dir(service.trim()) {
-                            def serviceName = service.trim().replaceAll('/', '')
+                            def serviceName = service.trim().replaceAll('./', '')
                             sh "docker build -t ${serviceName}:${BUILD_NUMBER} ."
                         }
                     }
