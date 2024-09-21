@@ -29,8 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
-		 <sonar.organization>krishnagopika4444</sonar.organization>
-  		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		
 	</properties>
 	<dependencies>
 		<dependency>
