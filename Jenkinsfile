@@ -8,6 +8,7 @@ pipeline {
         RDS_USERNAME = credentials('RDS_USERNAME')
         DB_PASSWORD = credentials('DB_PASSWORD')
         DB_URL = credentials('DB_URL')
+        SMTP_CREDENTIALS = credentials('SMTP')
     }
 
     stages {
@@ -50,12 +51,16 @@ pipeline {
          stage('Create .env file') {
             steps {
                 script {
+
+                withCredentials([usernamePassword(credentialsId: 'SMTP', usernameVariable: 'SMTP_USERNAME', passwordVariable: 'SMTP_PASSWORD')]) {
+
                     // Create .env file with database credentials
                     sh """
                     echo "DB_URL=${DB_URL}" > .env
                     echo "RDS_USERNAME=${RDS_USERNAME}" >> .env
                     echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
                     """
+                    }
                 }
             }
         }
