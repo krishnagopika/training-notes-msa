@@ -148,6 +148,8 @@ services:
       - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411/
       - SPRING_ZIPKIN_ENABLED=true
       - spring.kafka.bootstrap-servers=broker:29092
+      - SPRING_MAIL_USERNAME=${SMTP_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SMPT_PASSWORD}
 
     depends_on:
       - discovery-service
