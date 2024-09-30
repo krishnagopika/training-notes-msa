@@ -2,6 +2,7 @@ package com.revature.revshop;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -22,6 +23,10 @@ import java.util.Map;
 
 @SpringBootApplication
 public class NotificationServiceApplication {
+        @Value("${spring.kafka.bootstrap-servers}")
+        private String bootstrapServers;
+
+
 
     public static void main(String[] args) {
         SpringApplication.run(NotificationServiceApplication.class, args);
@@ -33,7 +38,7 @@ public class NotificationServiceApplication {
     @Bean
     public ConsumerFactory<String, OrderEvent> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "notificationId");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, OrderEventDeserializer.class);
