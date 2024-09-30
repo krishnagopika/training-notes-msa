@@ -149,7 +149,7 @@ services:
       - management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans
       - spring.kafka.bootstrap-servers=broker:29092
       - spring.mail.username=${SMTP_USERNAME}
-      - spring.mail.password=${SMPT_PASSWORD}
+      - spring.mail.password=${SMTP_PASSWORD}
 
     depends_on:
       - discovery-service
